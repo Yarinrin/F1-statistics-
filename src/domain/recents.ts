@@ -1,5 +1,7 @@
-import { isValidSeason } from './seasons';
-import { isArchiveSection, type ArchiveSection } from './wikipedia';
+// Explicit extensions: `src/domain` is plain TypeScript with no React or
+// storage imports, so the Node test runner loads these files directly.
+import { isValidSeason } from './seasons.ts';
+import { isArchiveSection, type ArchiveSection } from './wikipedia.ts';
 
 /** How many entries the "recently viewed" list keeps. */
 export const MAX_RECENT = 4;

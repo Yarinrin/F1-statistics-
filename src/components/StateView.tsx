@@ -1,7 +1,8 @@
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 
 import { useTheme } from '@/theme/ThemeProvider';
-import { HAIRLINE, RADIUS, SPACE } from '@/theme/tokens';
+import { fitTitleSize } from '@/theme/fitTitle';
+import { HAIRLINE, RADIUS, SPACE, TYPE } from '@/theme/tokens';
 
 import { PressableSurface } from './PressableSurface';
 import { AccentMark, Rule } from './primitives';
@@ -34,13 +35,30 @@ export function StateView({
   testID,
 }: StateViewProps) {
   const { palette } = useTheme();
+  const { width } = useWindowDimensions();
+  const titleSize = fitTitleSize(
+    title,
+    Math.max(200, width - SPACE.gutter * 2),
+    TYPE.display.fontSize,
+  );
+
   return (
     <View
       testID={testID}
       style={{ flex: 1, justifyContent: 'center', paddingHorizontal: SPACE.gutter }}
     >
       <AccentMark height={28} width={4} />
-      <Type token="display" uppercase style={{ marginTop: SPACE.lg }}>
+      <Type
+        token="display"
+        uppercase
+        allowFontScaling={false}
+        style={{
+          marginTop: SPACE.lg,
+          fontSize: titleSize,
+          lineHeight: Math.round(titleSize * 0.96),
+          letterSpacing: TYPE.display.letterSpacing * (titleSize / TYPE.display.fontSize),
+        }}
+      >
         {title}
       </Type>
       <Type token="body" color="muted" style={{ marginTop: SPACE.md, maxWidth: 320 }}>
