@@ -41,6 +41,36 @@ npm run lint
 npm test
 ```
 
+## Building an installable APK
+
+The release build is signed with the bundled debug keystore, so an APK installs
+on any device with "install from unknown sources" enabled — no signing setup.
+
+**Cloud (no Android SDK needed):**
+
+```bash
+npm install -g eas-cli
+eas login                       # a free Expo account
+eas build -p android --profile apk
+```
+
+The `apk` profile in `eas.json` is already set to emit an APK rather than the
+Play Store's `.aab`. EAS returns a download link when it finishes.
+
+**Local (needs Android Studio's SDK + JDK 17 or newer):**
+
+```bash
+npx expo prebuild --platform android
+cd android && ./gradlew assembleRelease
+# android/app/build/outputs/apk/release/app-release.apk
+```
+
+`android/` is generated, not committed — it is rebuilt from `app.json` on every
+prebuild, so configuration lives in one place.
+
+Before shipping to the Play Store, replace the debug keystore with your own
+(`signingConfigs.release` in `android/app/build.gradle`).
+
 ## Screens
 
 | Route            | What it is                                                         |
