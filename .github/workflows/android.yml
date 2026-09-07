@@ -1,0 +1,76 @@
+name: Android APK
+
+on:
+  push:
+    branches: [claude/f1-statistics-app-mvp-n5w7o1]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck and test
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Generate the native Android project
+        run: npx expo prebuild --platform android --no-install
+        env:
+          EXPO_NO_TELEMETRY: 1
+
+      - name: Build the release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        working-directory: android
+
+      - name: Collect the APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/release/app-release.apk out/apex-f1-archive.apk
+          ls -lh out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apex-f1-archive-apk
+          path: out/apex-f1-archive.apk
+          if-no-files-found: error
+
+      - name: Publish the APK as a release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v1.0.0-build.${{ github.run_number }}"
+          gh release create "$TAG" out/apex-f1-archive.apk \
+            --title "Apex $TAG" \
+            --notes "Android build of Apex, the Formula One statistics archive.
+
+          **Download \`apex-f1-archive.apk\` below and open it on your phone.**
+
+          Android will warn that it is from an unknown source — that is expected
+          for an APK installed outside the Play Store. Allow it for your browser
+          or file manager and the install proceeds.
+
+          Signed with the standard Android debug keystore, so it installs
+          directly but is not suitable for Play Store submission.
+
+          Built from \`${{ github.sha }}\`."
