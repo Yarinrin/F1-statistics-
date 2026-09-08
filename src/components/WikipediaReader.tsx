@@ -39,6 +39,21 @@ export function WikipediaReader({
     [anchor, patterns, articleTitle],
   );
 
+  // Platform-only props are kept apart on purpose. The native view types
+  // several of them per platform, and a prop the other platform declares as a
+  // number (decelerationRate) throws ClassCastException on creation if it is
+  // handed the string its own wrapper would have converted.
+  const platformProps = useMemo(
+    () =>
+      Platform.select({
+        ios: { allowsBackForwardNavigationGestures: true, pullToRefreshEnabled: true },
+        // Links that would open a new window have nowhere to go in a reader.
+        android: { setSupportMultipleWindows: false },
+        default: {},
+      }),
+    [],
+  );
+
   // Inside the reader the hardware back button walks back through Wikipedia
   // first, and only then closes the reader.
   useEffect(() => {
@@ -82,12 +97,7 @@ export function WikipediaReader({
         ref={webRef}
         source={{ uri: url }}
         originWhitelist={['https://*']}
-        // Links that would open a new window have nowhere to go inside a
-        // reader, so keep them in this one.
-        setSupportMultipleWindows={false}
-        allowsBackForwardNavigationGestures
-        pullToRefreshEnabled
-        decelerationRate="normal"
+        {...platformProps}
         injectedJavaScript={script}
         onMessage={handleMessage}
         onNavigationStateChange={handleNavigationStateChange}
